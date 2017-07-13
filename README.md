@@ -16,3 +16,18 @@ Upon receipt, the compresssed packet is parsed by the infrastructure C/D to deli
 For this purpose, the Device is implemented on a LoPy module, which is able to transmit via LoRa and can be easily programmed in MicroPython. The infrastructure C/S is implemented with a Node.js by an HTTP Server which receives the raw compressed packet LPWAN payload frames in a POST message. The answer is included in the Acknowledgement of this POST message.
 
 # compression / decompression in Python
+
+Different classes are needed to implement compression and decompression. 
+
+## Rule Manager
+
+RuleMngt.py defines RuleManager class which maintains the SCHC context.
+
+A ruleManager instance is created with a call the RuleManager()
+
+ RM = RuleManager()
+ 
+Then rules can be added using the addRule method:
+ 
+ RM.addRule(rule_coap0)
+ RM.addRule(rule_coap1)
