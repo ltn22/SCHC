@@ -49,4 +49,16 @@ A rule is composed of a list (dictionnary) of two elements:
 
  * ruleid defines the rule number,
  
- * content contains an array of field description.
+ * content contains an array of field description composed of:
+ 
+   ** a Field ID (which must correspond to a value returned by the field Parser.
+   
+   ** a field position: an integer, by default 1
+   
+   ** a field direction "bi", "up" and "dw"
+   
+   ** a target value
+   
+   ** a Matching Operator
+   
+   ** a Compression Decompression Action
