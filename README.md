@@ -36,4 +36,17 @@ Then rules can be added using the addRule method:
  RM.addRule(rule_coap1)
 ~~~~
 
+The rule is defined oin JSON using the following format:
 
+~~~~
+ rule_coap0 = {"ruleid"  : 0,
+               "content" : [["IPv6.version",      1,  "bi", 6,                  "equal",  "not-sent"],
+                            ["IPv6.trafficClass", 1,  "bi", 0x00,               "equal",  "not-sent"]] }
+ 
+~~~~
+
+A rule is composed of a list (dictionnary) of two elements:
+
+ * ruleid defines the rule number,
+ 
+ * content contains an array of field description.
