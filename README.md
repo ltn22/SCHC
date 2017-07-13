@@ -53,8 +53,18 @@ A rule is composed of a list (dictionnary) of two elements:
    * a Field ID (which must correspond to a value returned by the field Parser.
    * a field position: an integer, by default 1
    * a field direction "bi", "up" and "dw"
-   * a target value 
-   * a Matching Operator
-   * a Compression Decompression Action
+   * a Target Value: Integer or String
+   * a Matching Operator ("ignore", "equal", "MSB(v)", "match-mapping".
+   * a Compression Decompression Action ("not-sent", "value-sent", "LSB(v)", mapping-sent", "compute-length", "compute-checksum")
    
+The method FindRuleFromId(ruleid) returns the rule corresponding the ruleid.
+
+The method FindRuleFromPkt (header, direction) returns the rule corresponding the header
+field list contained in the first argument. This value comes generally from a packet
+header parsing done with the class Parser. The second argument is either "up", "dw" or "bi",
+indication the direction from the device point of view.
+
+For both methods, if no rule is found, a None is returned.
+
+
 
