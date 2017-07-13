@@ -25,9 +25,15 @@ RuleMngt.py defines RuleManager class which maintains the SCHC context.
 
 A ruleManager instance is created with a call the RuleManager()
 
+~~~~
  RM = RuleManager()
- 
+~~~~
+
 Then rules can be added using the addRule method:
- 
+
+~~~~
  RM.addRule(rule_coap0)
  RM.addRule(rule_coap1)
+~~~~
+
+
