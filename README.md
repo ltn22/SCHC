@@ -1,12 +1,6 @@
 Static Context Header Compression (SCHC, pronounced chic) is a *generic* compression mechanism for LPWAN networks. It is standardized at the IETF.
 
---- abstract
-
-This implementation applies SCHC to CoAP/UDP/IPv6 headers.
-
-It targets LoRaWAN end-devices of class A (asymmetric bi-directional).   
-
---- middle
+This implementation applies SCHC to CoAP/UDP/IPv6 headers, but can be extended to other type of fields.
 
 # Introduction
 
