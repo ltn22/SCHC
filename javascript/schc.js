@@ -611,7 +611,6 @@ cdf.prototype.forgePacket = function (rule, message, direction) {
 
     // rest of iBuf are data, put them after the uncompressed header
 
-
     while (this.iIdx < this.iBuf.length*8) {
 
 	val = this.getiBufBit()
