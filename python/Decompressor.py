@@ -19,16 +19,12 @@ from Parser import Parser
 import struct
 import re
 from RuleMngt import RuleManager
+import BitBuffer
 
 class Decompressor:
 
     def __init__(self, RM):
         self.RuleMngt = RM
-        self.eBuf     = bytearray(b'')
-        self.iBuf     = bytearray(b'')
-        self.eIdx     = 0      # in bits, where to add the next bit
-        self.iIdx     = 0      # in bits, where to read for decompression
-
 
         self.DecompressionActions = {
             "not-sent" : self.DA_notSent,
@@ -70,7 +66,7 @@ class Decompressor:
         print("Not implemented")
         return
 
-    def DA_notSent(self, TV, length, nature, arg, algo):
+    def DA_notSent(self, buf, headers, TV, length, nature, arg, algo):
         print ("DA_notSent", TV, length, nature, arg, algo)
 
         if (nature == "variable"):
@@ -78,20 +74,20 @@ class Decompressor:
 
         if (type(TV) is int):
             for i in range (length-1, -1, -1):
-                self.addBit(TV & (1<<i))
+                buf.add_bit(TV & (1<<i))
 
-    def DA_valueSent(self, TV, length, nature, arg, algo):
+    def DA_valueSent(self, buf, headers, TV, length, nature, arg, algo):
         print ("DA_notSent", TV, length, nature, arg, algo)
         if (nature == "variable"):
             len = 0
             for i in range (0, 4):
                 len <<= 1
-                len |= self.getiBufbit()
+                len |= headers.next_bit()
 
             len *= 8
 
             if (algo == "direct"):
-                self.DA_valueSent(null, len, "fixed", null, algo)
+                self.DA_valueSent(buf, headers, null, len, "fixed", null, algo)
             else:
                 if "CoAPOption" in algo:
                     buff = bytearray (b'')
@@ -100,13 +96,13 @@ class Decompressor:
                         offset = b % 8
                         if len(buf) == octet: buff.append(0x00)
 
-                        buff[octet] |= self.getiBufbit() << offset
+                        buff[octet] |= headers.next_bit() << offset
         elif nature == "fixed":
             if algo == "direct":
                 for i in range(length):
-                    self.addBit(self.getiBufbit())
+                    buf.add_bit(headers.next_bit())
 
-    def DA_mappingSent(self, TV, length, nature, arg, algo):
+    def DA_mappingSent(self, buf, headers, TV, length, nature, arg, algo):
         print ("DA_mappingSent", TV, length, nature, arg, algo)
 
         elmNb = len(TV)
@@ -115,147 +111,104 @@ class Decompressor:
 
         index = 0
         for i in range(0, bitNb):
-            v = self.getiBufBit()
+            v = headers.next_bit()
             index <<= 1
             index |= v
 
-        self.DA_notSent(TV[index], length, "fixed", None, algo)
+        self.DA_notSent(buf, headers, TV[index], length, "fixed", None, algo)
 
 
-    def DA_LSB(self, TV, length, nature, arg, algo):
+    def DA_LSB(self, buf, headers, TV, length, nature, arg, algo):
         print ("DA_LSB", TV, length, nature, arg, algo)
         if (nature == "variable"):
             len = 0
             for i in range (0, 4):
                 len <<= 1
-                len |= self.getiBufbit()
+                len |= headers.next_bit()
 
             len *= 8
-            self.DA_LSB(TV, len, "fixed", None, algo)
+            self.DA_LSB(buf, headers, TV, len, "fixed", None, algo)
         elif nature == "fixed":
             if type(TV) is int:
                 merged = TV
 
                 for i in range(arg-1, -1, -1):
-                    binval = self.getiBufBit()
+                    binval = headers.next_bit()
 
                     merged |= binval << i
 
                     print ("merged TV ", TV, " and binval ", binval, " = "   , merged)
 
-                self.DA_notSent(merged, length, "fixed", None, algo)
+                self.DA_notSent(buf, headers, merged, length, "fixed", None, algo)
             elif type(TV) == str:
-                if (length %8 != 0):
+                if (length % 8 != 0):
                     print ("error")
                 else:
                     charNb = length // 8
                     for i in range(0, charNb):
                         value = 0
                         for k in range (7, -1, -1):
-                            value |= self.getiBufBit() << k
+                            value |= headers.next_bit() << k
                         TV.append(value)
-                    self.DA_notSent(TV, len(TV)*8, "fixed", None, algo)
+                    self.DA_notSent(buf, headers, TV, len(TV)*8, "fixed", None, algo)
             else:
                 print ("not implemented")
 
-    def DA_computeLength(self, TV, length, nature, arg, algo):
+    def DA_computeLength(self, buf, headers, TV, length, nature, arg, algo):
         print ("DA_computeLength", TV, length, nature, arg, algo)
-        self.DA_notSent(0xFFFF, 16, "fixed", None, algo)
+        self.DA_notSent(buf, headers, 0xFFFF, 16, "fixed", None, algo)
 
-    def DA_computeChecksum(self, TV, length, nature, arg, algo):
+    def DA_computeChecksum(self, buf, headers, TV, length, nature, arg, algo):
         print ("DA_computeChecksum", TV, length, nature, arg, algo)
-        self.DA_notSent(0xCCCC, 16, "fixed", None, algo)
-
-    def addBit (self, b): # add a bit to the compressed buffer. if b == 0 bit = 0; bit =1 otherwise
-        octet = int(self.eIdx / 8)
-        offset = int (7 - self.eIdx % 8)
-
-        if len(self.eBuf) < (octet + 1):
-            self.eBuf.append(0)
-
-        if (b != 0):
-            self.eBuf[octet] |= (1 << offset)
-
-        self.eIdx += 1
-
-        # for i in range (0, len(self.eBuf)):
-        #     print ("{0:08b}".format(self.eBuf[i]), end=" ")
-        # print('/', self.eIdx)
-
-    def getiBufBit(self):
-#        print (self.iBuf)
-        octet = self.iIdx // 8
-        offset =  7 - (self.iIdx % 8)
-
-        msk = 1 << offset
-        bin = self.iBuf[octet] & msk
-
-        # print ('reading ', self.iBuf[octet], msk)
-
-        # if bin != 0:
-        #     print (' B=1')
-        # else:
-        #     print (' B=0')
-
-        self.iIdx += 1
-
-        if bin != 0:
-            return (0x01)
-        else:
-            return (0x00)
-
+        self.DA_notSent(buf, headers, 0xCCCC, 16, "fixed", None, algo)
 
     def apply (self, header, rule, direction):
+        buf = BitBuffer.BitBuffer()
+        headersBuf = BitBuffer.BitBuffer(header)
 
-            self.eBuf = bytearray(b'') # bad naming compress will contain the uncompress header
-            self.eIdx = 0                  # should be aligned in the JS with ingress and egress buffer
-            self.iIdx = 0
-            self.iBuf = header
+        # print ('iBuf', self.iBuf, ' header ', header)
+        for e in rule["content"]:
+            FID = e[0]
+            POS = e[1]
+            DIR = e[2]
 
-            # print ('iBuf', self.iBuf, ' header ', header)
+            if (DIR == "bi") or (DIR == direction):
+                TV = e[3]
+                MO = e[4]
+                DA = e[5]
+                FV = None
 
-            for e in rule["content"]:
-                FID = e[0]
-                POS = e[1]
-                DIR = e[2]
-
-                if (DIR == "bi") or (DIR == direction):
-                    TV = e[3]
-                    MO = e[4]
-                    DA = e[5]
-                    FV = None
-
-                    nature = None
-                    arg = None
-                    reg = re.search('\((.*)\)', DA)
+                nature = None
+                arg = None
+                reg = re.search('\((.*)\)', DA)
+                if reg:
+                    # group(1) returns the first parenthesized subgroup
+                    arg = int(reg.group(1))
+                    DA = DA.split('(')[0] # remove the argument and parentheses
+                    DA = DA.replace (' ', '') # suppress blank if any
+                else: # no length specified, based it on MO
+                    reg = re.search('\((.*)\)', MO)
                     if reg:
-                        # group(1) returns the first parenthesized subgroup
                         arg = int(reg.group(1))
-                        DA = DA.split('(')[0] # remove the argument and parentheses
-                        DA = DA.replace (' ', '') # suppress blank if any
-                    else: # no length specified, based it on MO
-                        reg = re.search('\((.*)\)', MO)
-                        if reg:
-                            arg = int(reg.group(1))
 
-                    if (type(self.field_size[FID][0]) is int):
-                        nature = "fixed"
-                        size   = self.field_size[FID][0]
-                        if (arg != None): # /!\ do not work is DA contains a value
-                            arg = size - arg # /!\ check if negative
-                    elif (type (self.field_size[FID][0])is str):
-                        if (self.field_size[FID][0] == "variable"):
-                            nature = "variable"
-                        else:
-                            print ("/!\ Unknown field siez keywork")
+                if (type(self.field_size[FID][0]) is int):
+                    nature = "fixed"
+                    size   = self.field_size[FID][0]
+                    if (arg != None): # /!\ do not work is DA contains a value
+                        arg = size - arg # /!\ check if negative
+                elif (type (self.field_size[FID][0])is str):
+                    if (self.field_size[FID][0] == "variable"):
+                        nature = "variable"
+                    else:
+                        print ("/!\ Unknown field siez keywork")
 
-                    algo = self.field_size[FID][1]
+                algo = self.field_size[FID][1]
 
-                    # print ("DECOMPRESSION: ", "FID = ", FID, " ", DA, " TV= ", TV, " size= ", size, " nature = ", nature, " arg = ", arg)
+                # print ("DECOMPRESSION: ", "FID = ", FID, " ", DA, " TV= ", TV, " size= ", size, " nature = ", nature, " arg = ", arg)
 
-                    self.DecompressionActions[DA](TV, size, nature, arg, algo)
+                self.DecompressionActions[DA](buf, headersBuf, TV, size, nature, arg, algo)
 
-            return self.eBuf, self.eIdx
+        return buf.buffer(), buf.size()
 
 #                           fID                  Pos  DI  TV                  MO           CDA
 # rule_coap0 = {"ruleid"  : 0,
