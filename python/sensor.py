@@ -50,6 +50,9 @@ from BMP280 import BMP280
 IPv6_source = binascii.unhexlify("200104701f1209f2000000000000000b".replace (':', ''))
 IPv6_dest   = binascii.unhexlify("200141d0040131000000000000003682".replace (':', ''))
 
+#IPv6_source = binascii.unhexlify("FE80:0000:0000:0000:0000:0000:0000:0001".replace (':', ''))
+#IPv6_dest   = binascii.unhexlify("FE80:0000:0000:0000:0000:0000:0000:0002".replace (':', ''))
+
 
 #                           fID                  Pos  DI  TV                  MO           CDA
 rule_coap0 = {"ruleid"  : 0,
