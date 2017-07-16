@@ -525,17 +525,17 @@ cdf.prototype.loadIIDs = function(ESiid,LAiid){
 // HACERLO BIEN COMO TOUTAIN
 
 cdf.prototype.findRule = function ( ES_DID, message ) {
-    console.log("find rule for ", ES_DID);
+//    console.log("find rule for ", ES_DID);
 
     rule = message.slice(0,2)
     rule = parseInt(rule);
 
-    console.log ("Message RuleId is: ", rule);
+//    console.log ("Message RuleId is: ", rule);
 
     for (var i = 0; i < this.context.length; i++) {
-	console.log("rule ", this.context[i]);
+//	console.log("rule ", this.context[i]);
 	if (this.context[i]['ruleid'] == rule) {
-	    console.log('BINGO')
+//	    console.log('BINGO')
 	    return this.context[i]
 	}
     }
@@ -612,12 +612,6 @@ cdf.prototype.forgePacket = function (rule, message, direction) {
     // rest of iBuf are data, put them after the uncompressed header
 
 
-    // eat padding between compressed headers and data
-
-    while ((this.iIdx % 8) != 0) this.getiBufBit()
-
-    console.log("PADDING"); 
-    
     while (this.iIdx < this.iBuf.length*8) {
 
 	val = this.getiBufBit()

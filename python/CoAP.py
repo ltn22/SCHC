@@ -15,13 +15,14 @@ SCHC compressor, Copyright (c) <2017><IMT Atlantique and Philippe Clavier>
     along with this program.  If not, see <http://www.gnu.org/licenses/>
 '''
 
-from network import LoRa
+#from network import LoRa
 import socket
 import pycom
 import struct
 from CBOR import CBOR
 import time
 import binascii
+import sys
 
 
 
@@ -37,88 +38,88 @@ ACK = 2
 RST = 3
 """Reset message type"""
 
-types = {0: 'CON',
-         1: 'NON',
-         2: 'ACK',
-         3: 'RST'}
+# types = {0: 'CON',
+#          1: 'NON',
+#          2: 'ACK',
+#          3: 'RST'}
 
 EMPTY = 0
 GET = 1
 POST = 2
 PUT = 3
 DELETE = 4
-CREATED = 65
-DELETED = 66
-VALID = 67
-CHANGED = 68
-CONTENT = 69
-CONTINUE = 95
-BAD_REQUEST = 128
-UNAUTHORIZED = 129
-BAD_OPTION = 130
-FORBIDDEN = 131
-NOT_FOUND = 132
-METHOD_NOT_ALLOWED = 133
-NOT_ACCEPTABLE = 134
-REQUEST_ENTITY_INCOMPLETE = 136
-PRECONDITION_FAILED = 140
-REQUEST_ENTITY_TOO_LARGE = 141
-UNSUPPORTED_CONTENT_FORMAT = 143
-INTERNAL_SERVER_ERROR = 160
-NOT_IMPLEMENTED = 161
-BAD_GATEWAY = 162
-SERVICE_UNAVAILABLE = 163
-GATEWAY_TIMEOUT = 164
-PROXYING_NOT_SUPPORTED = 165
+# CREATED = 65
+# DELETED = 66
+# VALID = 67
+# CHANGED = 68
+# CONTENT = 69
+# CONTINUE = 95
+# BAD_REQUEST = 128
+# UNAUTHORIZED = 129
+# BAD_OPTION = 130
+# FORBIDDEN = 131
+# NOT_FOUND = 132
+# METHOD_NOT_ALLOWED = 133
+# NOT_ACCEPTABLE = 134
+# REQUEST_ENTITY_INCOMPLETE = 136
+# PRECONDITION_FAILED = 140
+# REQUEST_ENTITY_TOO_LARGE = 141
+# UNSUPPORTED_CONTENT_FORMAT = 143
+# INTERNAL_SERVER_ERROR = 160
+# NOT_IMPLEMENTED = 161
+# BAD_GATEWAY = 162
+# SERVICE_UNAVAILABLE = 163
+# GATEWAY_TIMEOUT = 164
+# PROXYING_NOT_SUPPORTED = 165
 
-requests = {1: 'GET',
-            2: 'POST',
-            3: 'PUT',
-            4: 'DELETE'}
+# requests = {1: 'GET',
+#             2: 'POST',
+#             3: 'PUT',
+#             4: 'DELETE'}
 
-requests_rev = {v:k for k, v in requests.items()}
-
-IF_MATCH = 1
-URI_HOST = 3
-ETAG = 4
-IF_NONE_MATCH = 5
-OBSERVE = 6
-URI_PORT = 7
-LOCATION_PATH = 8
-URI_PATH = 11
-CONTENT_FORMAT = 12
-MAX_AGE = 14
-URI_QUERY = 15
-ACCEPT = 17
-LOCATION_QUERY = 20
-BLOCK2 = 23
-BLOCK1 = 27
-SIZE2 = 28
-PROXY_URI = 35
-PROXY_SCHEME = 39
-SIZE1 = 60
-
-options = {1: 'If-Match',
-           3: 'Uri-Host',
-           4: 'ETag',
-           5: 'If-None-Match',
-           6: 'Observe',
-           7: 'Uri-Port',
-           8: 'Location-Path',
-           11: 'Uri-Path',
-           12: 'Content-Format',
-           14: 'Max-Age',
-           15: 'Uri-Query',
-           17: 'Accept',
-           20: 'Location-Query',
-           23: 'Block2',
-           27: 'Block1',
-           28: 'Size2',
-           35: 'Proxy-Uri',
-           39: 'Proxy-Scheme',
-           60: 'Size1'}
-
-options_rev = {v:k for k, v in options.items()}
+# requests_rev = {v:k for k, v in requests.items()}
+#
+# IF_MATCH = 1
+# URI_HOST = 3
+# ETAG = 4
+# IF_NONE_MATCH = 5
+# OBSERVE = 6
+# URI_PORT = 7
+# LOCATION_PATH = 8
+# URI_PATH = 11
+# CONTENT_FORMAT = 12
+# MAX_AGE = 14
+# URI_QUERY = 15
+# ACCEPT = 17
+# LOCATION_QUERY = 20
+# BLOCK2 = 23
+# BLOCK1 = 27
+# SIZE2 = 28
+# PROXY_URI = 35
+# PROXY_SCHEME = 39
+# SIZE1 = 60
+#
+# options = {1: 'If-Match',
+#            3: 'Uri-Host',
+#            4: 'ETag',
+#            5: 'If-None-Match',
+#            6: 'Observe',
+#            7: 'Uri-Port',
+#            8: 'Location-Path',
+#            11: 'Uri-Path',
+#            12: 'Content-Format',
+#            14: 'Max-Age',
+#            15: 'Uri-Query',
+#            17: 'Accept',
+#            20: 'Location-Query',
+#            23: 'Block2',
+#            27: 'Block1',
+#            28: 'Size2',
+#            35: 'Proxy-Uri',
+#            39: 'Proxy-Scheme',
+#            60: 'Size1'}
+#
+# options_rev = {v:k for k, v in options.items()}
 
 mid = 1
 
@@ -161,15 +162,13 @@ class CoAPSM:
         print (rule)
         if (rule != None):
             result = struct.pack('!B', rule["ruleid"]) # start with the ruleid
-            res =            self.comp.apply(fields, rule["content"], "up")
+            res =            self.comp.apply(fields, rule["content"], "up", data)
             print("compressed = ", binascii.hexlify(res))
             result += res
-            result += data                 # add data after the headers
 
             print("Compressed Header = ", result)
 
             self.toBeAcked.append(MsgInWait(sock, msg, result,  timeout))
-
 
     def acked (self,  a):
         for m in self.toBeAcked:
@@ -202,24 +201,28 @@ class CoAPSM:
 
                 if (element.msg.type() == NON):
                     #No ack remove from the list
-                    coapC.acked(element.msg)
+                    self.acked(element.msg)
 
                 element.socket.setblocking(True)
                 element.socket.settimeout(20)
 
                 print("sending: ", end="")
                 print(binascii.hexlify(element.comprimed), end=' ')
+                print(len(element.comprimed), " bytes ", end='|')
                 print(' DR = ',  element.DR,  'attempt =', element.attempts)
 
                 if (element.attempts == 2): element.DR = 4
                 if (element.attempts == 4): element.DR = 2
 
-                element.socket.setsockopt(socket.SOL_LORA, socket.SO_DR, element.DR)
+                try: # works only for LoRa, Sigfox generates error
+                    element.socket.setsockopt(socket.SOL_LORA, socket.SO_DR, element.DR)
+                    element.socket.setblocking(True)
+                    element.socket.settimeout(10)
+                except:
+                    pass
+
                 pycom.rgbled(0xFF0000) # LED sending
 #
-                element.socket.setblocking(True)
-                element.socket.settimeout(10)
-
                 try:
                     element.socket.send(bytes(element.comprimed))
                 except:
@@ -279,8 +282,10 @@ class CoAPSM:
             time.sleep(20)
 
         #end while
-        print("no more time for retransmission")
-        time.sleep (finishIn - time.time())
+
+        lastTime = finishIn-time.time()
+        print("no more time for retransmission:", lastTime)
+        if (lastTime > 0): time.sleep (finishIn - time.time())
 
     def IP_UDP(self,  ips,  ipd,  ps,  pd,  ulp):
 

@@ -143,14 +143,14 @@ class Compressor:
 
         self.eIdx += 1
 
-        # for i in range (0, len(self.eBuf)):
-        #     print ("{0:08b}".format(self.eBuf[i]), end=" ")
-        # print('/', self.eIdx)
+        for i in range (0, len(self.eBuf)):
+            print ("{0:08b}".format(self.eBuf[i]), end=" ")
+        print('/', self.eIdx)
 
 
 
 
-    def apply (self, headers, rule, direction):
+    def apply (self, headers, rule, direction, data):
         self.eBuf = bytearray(b'')
         self.eIdx = 0
 
@@ -193,6 +193,15 @@ class Compressor:
 
         # print ("Compressor returns ", end='[]')
         # print(binascii.hexlify(self.eBuf), end=']')
+
+        # Add data
+
+        for octet in data:
+            print ("add data byte", octet)
+            for b in range (7, -1, -1):
+                bit = octet & (1 << b)
+                self.addBit(bit)
+
         return self.eBuf
 
 
