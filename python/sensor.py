@@ -16,7 +16,7 @@ SCHC compressor, Copyright (c) <2017><IMT Atlantique and Philippe Clavier>
 '''
 
 SIGFOX = False
-LORAWAN = True
+LORAWAN = not SIGFOX
 
 if LORAWAN:
     from network import LoRa
@@ -152,9 +152,10 @@ print ('MEM', gc.mem_free())
 
 if LORAWAN:
     lora = LoRa(mode=LoRa.LORAWAN)
+    increase_delivary_chances_function = CoAP.increase_delivary_chances_functions["LORAWAN"]
 if SIGFOX:
     sigfox = Sigfox(mode=Sigfox.SIGFOX, rcz=Sigfox.RCZ1)
-
+    increase_delivary_chances_function = CoAP.increase_delivary_chances_functions["SIGFOX"]
 
 RM = RuleManager()
 RM.addRule (rule_coap0)
@@ -164,8 +165,7 @@ RM.addRule (rule_coap2)
 p = Parser()
 comp = Compressor(RM)
 dec  = Decompressor(RM)
-coapC = CoAP.CoAPSM(p, comp, dec, IPv6_source, IPv6_dest)
-
+coapC = CoAP.CoAPSM(p, comp, dec, IPv6_source, IPv6_dest, increase_delivary_chances_function)
 
 app_eui = binascii.unhexlify('00 00 00 00 00 00 00 00'.replace(' ',''))
 app_key = binascii.unhexlify('11 22 33 44 55 66 77 88 11 22 33 44 55 66 77 88'.replace(' ',''))
