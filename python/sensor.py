@@ -47,8 +47,8 @@ from Decompressor import Decompressor
 from machine import I2C
 from BMP280 import BMP280
 
-IPv6_source = binascii.unhexlify("FE80:0000:0000:0000:0000:0000:0000:0001".replace (':', ''))
-IPv6_dest   = binascii.unhexlify("FE80:0000:0000:0000:0000:0000:0000:0002".replace (':', ''))
+IPv6_source = binascii.unhexlify("200104701f1209f2000000000000000b".replace (':', ''))
+IPv6_dest   = binascii.unhexlify("200141d0040131000000000000003682".replace (':', ''))
 
 
 #                           fID                  Pos  DI  TV                  MO           CDA
@@ -78,21 +78,21 @@ rule_coap0 = {"ruleid"  : 0,
                        ]}
 
 rule_coap1 = {"ruleid"  : 1,
-             "content" : [["IPv6.version",      1,  "bi", 6,                  "equal",  "not-sent"],
-                          ["IPv6.trafficClass", 1,  "bi", 0x00,               "equal",  "not-sent"],
-                          ["IPv6.flowLabel",    1,  "bi", 0x000000,            "equal",  "not-sent"],
+             "content" : [["IPv6.version",      1,  "bi", 6,                  "equal", "not-sent"],
+                          ["IPv6.trafficClass", 1,  "bi", 0x00,               "equal", "not-sent"],
+                          ["IPv6.flowLabel",    1,  "bi", 0x000000,           "ignore", "not-sent"],
                           ["IPv6.payloadLength",1,  "bi", None,               "ignore", "compute-length"],
-                          ["IPv6.nextHeader",   1,  "bi", 17,                 "equal",  "not-sent"],
-                          ["IPv6.hopLimit",     1,  "bi", 30,                 "ignore", "not-sent"],
-                          ["IPv6.prefixES",     1,  "bi", 0xFE80000000000000, "equal", "not-sent"],
-                          ["IPv6.iidES",        1,  "bi", 0x0000000000000001, "equal", "not-sent"],
-                          ["IPv6.prefixLA",     1,  "bi", [0x2001066073010001,
+                          ["IPv6.nextHeader",   1,  "bi", 17,                 "equal", "not-sent"],
+                          ["IPv6.hopLimit",     1,  "bi", 30,                 "equal", "not-sent"],
+                          ["IPv6.prefixES",     1,  "bi", 0x200104701f1209f2, "equal", "not-sent"],
+                          ["IPv6.iidES",        1,  "bi", 0x000000000000000b, "equal", "not-sent"],
+                          ["IPv6.prefixLA",     1,  "bi", [0xFE80000000000000,
                                                            0x2001123456789012,
-                                                           0x2001123456789013,
-                                                           0xFE80000000000000],"match-mapping", "mapping-sent"],
-                          ["IPv6.iidLA",        1,  "bi", 0x0000000000000002, "equal", "not-sent"],
-                          ["UDP.PortES",        1,  "bi", 5682,               "equal", "not-sent"],
-                          ["UDP.PortLA",        1,  "bi", 5683,               "equal", "not-sent"],
+                                                           0x200104701f1209f2,
+                                                           0x200141d004013100],"match-mapping", "mapping-sent"],
+                          ["IPv6.iidLA",        1,  "bi", 0x0000000000003682, "equal", "not-sent"],
+                          ["UDP.PortES",        1,  "bi", 5684,               "equal", "not-sent"],
+                          ["UDP.PortLA",        1,  "bi", 5684,               "equal", "not-sent"],
                           ["UDP.length",        1,  "bi", None,               "ignore", "compute-length"],
                           ["UDP.checksum",      1,  "bi", None,               "ignore", "compute-checksum"],
                           ["CoAP.version",      1,  "bi", 1,                  "equal", "not-sent"],
@@ -106,6 +106,7 @@ rule_coap1 = {"ruleid"  : 1,
                           ["CoAP.Uri-Path",     1,  "up", "foo",              "equal", "not-sent"],
                           ["CoAP.Uri-Path",     2,  "up", "bar",              "equal", "not-sent"],
                           ["CoAP.Uri-Path",     3,  "up", None,               "ignore", "value-sent"],
+                          ["CoAP.Content-Format",1, "dw", None,               "ignore", "value-sent"],
                           ["CoAP.Uri-Query",    1,  "up", "k=",               "MSB(16)", "LSB"],
                           ["CoAP.Option-End",   1,  "up", 0xFF,               "equal", "not-sent"]
                        ]}
