@@ -365,6 +365,10 @@ httpServer.post('/coap', function(req, res){
         var http_data = JSON.parse(buff.toString());
 
 //	console.log ('RAW JSON', util.inspect(http_data))
+
+        if (http_data.data === undefined) {
+          return;
+        }
 	
         var ES_DID = http_data.devEUI;
         var message = http_data.data;
