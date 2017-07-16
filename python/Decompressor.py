@@ -88,16 +88,32 @@ class Decompressor:
                 self.DA_valueSent( buf, headers, null, leng, "fixed", null, algo )
             else:
                 if "CoAPOption" in algo:
-                    buff = bytearray ( b'' )
-                    for b in range( 0, leng ):
-                        octet = b // 8
-                        offset = b % 8
-                        if len( buff ) == octet: buff.append( 0x00 )
-
-                        buff[octet] |= headers.next_bit() << offset
-                        
-                    buf._buf += buff
-                    buf._bit_index += 8 * len( buff )
+                    delta = algo["CoAPOption"] - self.opt_num
+                    if leng != 0:
+                        # buff = bytearray ( b'' )
+                        buff = []
+                        for b in range( 0, leng ):  # This is not well done
+                            octet = b // 8
+                            offset = b % 8
+                            if len( buff ) == octet: 
+                                buff.append( 0x00 )
+                                  
+                            buff[octet] = buff[octet] << 1 | headers.next_bit()
+                            
+                        delta_opt_len = algo["CoAPOption"] << 4 | int( leng / 8 )
+                        # delta_opt_len = delta << 4 | len( buff )
+                        buf.add_byte( delta_opt_len )
+                        buf.add_bytes( buff )
+                        buf._bit_index += 8 * len( buff )
+                    else:
+                        delta_opt_len = algo["CoAPOption"] << 4
+                        buf.add_byte( delta_opt_len )
+                        buf._bit_index += 8
+                        # for i in range( 4 ):
+                        #    buf.add_bit( 0 )
+                        # Puede que falte agregar el TL - T.. - Length
+                    
+                    self.opt_num = algo["CoAPOption"]
                         
         elif nature == "fixed":
             if algo == "direct":
@@ -180,6 +196,8 @@ class Decompressor:
                 DA = e[5]
                 FV = None
 
+                self.opt_num = 0
+
                 nature = None
                 arg = None
                 reg = re.search( '\((.*)\)', DA )
@@ -210,12 +228,18 @@ class Decompressor:
 
                 self.DecompressionActions[DA]( buf, headersBuf, TV, size, nature, arg, algo )
 
-        length = len( headersBuf.buffer() ) * 8 - headersBuf.size()
-        if length % 8 != 0:
-            length -= length % 8    
+        
 
-        for i in range( length ):
-            buf.add_bit( headersBuf.next_bit() )
+        length = len( headersBuf.buffer() ) * 8 - headersBuf.size()
+        if length != 0:
+            
+            # add payload marker
+            
+            if length % 8 != 0:
+                length -= length % 8    
+    
+            for i in range( length ):
+                buf.add_bit( headersBuf.next_bit() )
 
         return buf.buffer(), buf.size()
 
