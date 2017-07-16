@@ -1,16 +1,13 @@
 '''
 SCHC compressor, Copyright (c) <2017><IMT Atlantique and Philippe Clavier>
-
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>
 '''
@@ -23,7 +20,7 @@ import BitBuffer
 
 class Decompressor:
 
-    def __init__(self, RM):
+    def __init__( self, RM ):
         self.RuleMngt = RM
 
         self.DecompressionActions = {
@@ -42,7 +39,7 @@ class Decompressor:
             "IPv6.payloadLength": [16, "direct"],
             "IPv6.nextHeader": [8, "direct"],
             "IPv6.hopLimit": [8, "direct"],
-	        "IPv6.checksum": [16, "direct"],
+            "IPv6.checksum": [16, "direct"],
             "IPv6.prefixES": [64, "direct"],
             "IPv6.iidES": [64, "direct"],
             "IPv6.prefixLA": [64, "direct"],
@@ -56,115 +53,120 @@ class Decompressor:
             "CoAP.tokenLength": [4, "direct"],
             "CoAP.code": [8, "direct"],
             "CoAP.messageID": [16, "direct"],
-            "CoAP.token": [8, "direct"],   # MUST be set to TKL value
-	        "CoAP.Uri-Path" :  ["variable", {"CoAPOption": 11}],
-	        "CoAP.Uri-Query" : ["variable", {"CoAPOption": 15}],
-	        "CoAP.Option-End" : [8, "direct"]
+            "CoAP.token": [8, "direct"],  # MUST be set to TKL value
+            "CoAP.Uri-Path" :  ["variable", {"CoAPOption": 11}],
+            "CoAP.Content-Format" : ["variable", {"CoAPOption": 12}],
+            "CoAP.Uri-Query" : ["variable", {"CoAPOption": 15}],
+            "CoAP.Option-End" : [8, "direct"]
         }
 
-    def compute_CoAPOption (type, length, value):
-        print("Not implemented")
+    def compute_CoAPOption ( type, length, value ):
+        print( "Not implemented" )
         return
 
-    def DA_notSent(self, buf, headers, TV, length, nature, arg, algo):
-        print ("DA_notSent", TV, length, nature, arg, algo)
+    def DA_notSent( self, buf, headers, TV, length, nature, arg, algo ):
+        print ( "DA_notSent", TV, length, nature, arg, algo )
 
-        if (nature == "variable"):
-            length = len(TV)*8
+        if ( nature == "variable" ):
+            length = len( TV ) * 8
 
-        if (type(TV) is int):
-            for i in range (length-1, -1, -1):
-                buf.add_bit(TV & (1<<i))
+        if ( type( TV ) is int ):
+            for i in range ( length - 1, -1, -1 ):
+                buf.add_bit( TV & ( 1 << i ) )
 
-    def DA_valueSent(self, buf, headers, TV, length, nature, arg, algo):
-        print ("DA_notSent", TV, length, nature, arg, algo)
-        if (nature == "variable"):
-            len = 0
-            for i in range (0, 4):
-                len <<= 1
-                len |= headers.next_bit()
+    def DA_valueSent( self, buf, headers, TV, length, nature, arg, algo ):
+        print ( "DA_notSent", TV, length, nature, arg, algo )
+        if ( nature == "variable" ):
+            leng = 0
+            for i in range ( 0, 4 ):
+                leng <<= 1
+                leng |= headers.next_bit()
 
-            len *= 8
+            leng *= 8
 
-            if (algo == "direct"):
-                self.DA_valueSent(buf, headers, null, len, "fixed", null, algo)
+            if ( algo == "direct" ):
+                self.DA_valueSent( buf, headers, null, leng, "fixed", null, algo )
             else:
                 if "CoAPOption" in algo:
-                    buff = bytearray (b'')
-                    for b in range(0, len):
+                    buff = bytearray ( b'' )
+                    for b in range( 0, leng ):
                         octet = b // 8
                         offset = b % 8
-                        if len(buf) == octet: buff.append(0x00)
+                        if len( buff ) == octet: buff.append( 0x00 )
 
                         buff[octet] |= headers.next_bit() << offset
+                        
+                    buf._buf += buff
+                    buf._bit_index += 8 * len( buff )
+                        
         elif nature == "fixed":
             if algo == "direct":
-                for i in range(length):
-                    buf.add_bit(headers.next_bit())
+                for i in range( length ):
+                    buff.add_bit( headers.next_bit() )
 
-    def DA_mappingSent(self, buf, headers, TV, length, nature, arg, algo):
-        print ("DA_mappingSent", TV, length, nature, arg, algo)
+    def DA_mappingSent( self, buf, headers, TV, length, nature, arg, algo ):
+        print ( "DA_mappingSent", TV, length, nature, arg, algo )
 
-        elmNb = len(TV)
+        elmNb = len( TV )
         bitNb = 0
-        while ((1 << bitNb) < elmNb): bitNb += 1
+        while ( ( 1 << bitNb ) < elmNb ): bitNb += 1
 
         index = 0
-        for i in range(0, bitNb):
+        for i in range( 0, bitNb ):
             v = headers.next_bit()
             index <<= 1
             index |= v
 
-        self.DA_notSent(buf, headers, TV[index], length, "fixed", None, algo)
+        self.DA_notSent( buf, headers, TV[index], length, "fixed", None, algo )
 
 
-    def DA_LSB(self, buf, headers, TV, length, nature, arg, algo):
-        print ("DA_LSB", TV, length, nature, arg, algo)
-        if (nature == "variable"):
-            len = 0
-            for i in range (0, 4):
-                len <<= 1
-                len |= headers.next_bit()
+    def DA_LSB( self, buf, headers, TV, length, nature, arg, algo ):
+        print ( "DA_LSB", TV, length, nature, arg, algo )
+        if ( nature == "variable" ):
+            leng = 0
+            for i in range ( 0, 4 ):
+                leng <<= 1
+                leng |= headers.next_bit()
 
-            len *= 8
-            self.DA_LSB(buf, headers, TV, len, "fixed", None, algo)
+            leng *= 8
+            self.DA_LSB( buf, headers, TV, leng, "fixed", None, algo )
         elif nature == "fixed":
-            if type(TV) is int:
+            if type( TV ) is int:
                 merged = TV
 
-                for i in range(arg-1, -1, -1):
+                for i in range( arg - 1, -1, -1 ):
                     binval = headers.next_bit()
 
                     merged |= binval << i
 
-                    print ("merged TV ", TV, " and binval ", binval, " = "   , merged)
+                    print ( "merged TV ", TV, " and binval ", binval, " = "   , merged )
 
-                self.DA_notSent(buf, headers, merged, length, "fixed", None, algo)
-            elif type(TV) == str:
-                if (length % 8 != 0):
-                    print ("error")
+                self.DA_notSent( buf, headers, merged, length, "fixed", None, algo )
+            elif type( TV ) == str:
+                if ( length % 8 != 0 ):
+                    print ( "error" )
                 else:
                     charNb = length // 8
-                    for i in range(0, charNb):
+                    for i in range( 0, charNb ):
                         value = 0
-                        for k in range (7, -1, -1):
+                        for k in range ( 7, -1, -1 ):
                             value |= headers.next_bit() << k
-                        TV.append(value)
-                    self.DA_notSent(buf, headers, TV, len(TV)*8, "fixed", None, algo)
+                        TV.append( value )
+                    self.DA_notSent( buf, headers, TV, len( TV ) * 8, "fixed", None, algo )
             else:
-                print ("not implemented")
+                print ( "not implemented" )
 
-    def DA_computeLength(self, buf, headers, TV, length, nature, arg, algo):
-        print ("DA_computeLength", TV, length, nature, arg, algo)
-        self.DA_notSent(buf, headers, 0xFFFF, 16, "fixed", None, algo)
+    def DA_computeLength( self, buf, headers, TV, length, nature, arg, algo ):
+        print ( "DA_computeLength", TV, length, nature, arg, algo )
+        self.DA_notSent( buf, headers, 0xFFFF, 16, "fixed", None, algo )
 
-    def DA_computeChecksum(self, buf, headers, TV, length, nature, arg, algo):
-        print ("DA_computeChecksum", TV, length, nature, arg, algo)
-        self.DA_notSent(buf, headers, 0xCCCC, 16, "fixed", None, algo)
+    def DA_computeChecksum( self, buf, headers, TV, length, nature, arg, algo ):
+        print ( "DA_computeChecksum", TV, length, nature, arg, algo )
+        self.DA_notSent( buf, headers, 0xCCCC, 16, "fixed", None, algo )
 
-    def apply (self, header, rule, direction):
+    def apply ( self, header, rule, direction ):
         buf = BitBuffer.BitBuffer()
-        headersBuf = BitBuffer.BitBuffer(header)
+        headersBuf = BitBuffer.BitBuffer( header )
 
         # print ('iBuf', self.iBuf, ' header ', header)
         for e in rule["content"]:
@@ -172,7 +174,7 @@ class Decompressor:
             POS = e[1]
             DIR = e[2]
 
-            if (DIR == "bi") or (DIR == direction):
+            if ( DIR == "bi" ) or ( DIR == direction ):
                 TV = e[3]
                 MO = e[4]
                 DA = e[5]
@@ -180,33 +182,40 @@ class Decompressor:
 
                 nature = None
                 arg = None
-                reg = re.search('\((.*)\)', DA)
+                reg = re.search( '\((.*)\)', DA )
                 if reg:
                     # group(1) returns the first parenthesized subgroup
-                    arg = int(reg.group(1))
-                    DA = DA.split('(')[0] # remove the argument and parentheses
-                    DA = DA.replace (' ', '') # suppress blank if any
-                else: # no length specified, based it on MO
-                    reg = re.search('\((.*)\)', MO)
+                    arg = int( reg.group( 1 ) )
+                    DA = DA.split( '(' )[0]  # remove the argument and parentheses
+                    DA = DA.replace ( ' ', '' )  # suppress blank if any
+                else:  # no length specified, based it on MO
+                    reg = re.search( '\((.*)\)', MO )
                     if reg:
-                        arg = int(reg.group(1))
+                        arg = int( reg.group( 1 ) )
 
-                if (type(self.field_size[FID][0]) is int):
+                if ( type( self.field_size[FID][0] ) is int ):
                     nature = "fixed"
-                    size   = self.field_size[FID][0]
-                    if (arg != None): # /!\ do not work is DA contains a value
-                        arg = size - arg # /!\ check if negative
-                elif (type (self.field_size[FID][0])is str):
-                    if (self.field_size[FID][0] == "variable"):
+                    size = self.field_size[FID][0]
+                    if ( arg != None ):  # /!\ do not work is DA contains a value
+                        arg = size - arg  # /!\ check if negative
+                elif ( type ( self.field_size[FID][0] )is str ):
+                    if ( self.field_size[FID][0] == "variable" ):
                         nature = "variable"
                     else:
-                        print ("/!\ Unknown field siez keywork")
+                        print ( "/!\ Unknown field size keywork" )
 
                 algo = self.field_size[FID][1]
 
                 # print ("DECOMPRESSION: ", "FID = ", FID, " ", DA, " TV= ", TV, " size= ", size, " nature = ", nature, " arg = ", arg)
 
-                self.DecompressionActions[DA](buf, headersBuf, TV, size, nature, arg, algo)
+                self.DecompressionActions[DA]( buf, headersBuf, TV, size, nature, arg, algo )
+
+        length = len( headersBuf.buffer() ) * 8 - headersBuf.size()
+        if length % 8 != 0:
+            length -= length % 8    
+
+        for i in range( length ):
+            buf.add_bit( headersBuf.next_bit() )
 
         return buf.buffer(), buf.size()
 
