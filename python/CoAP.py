@@ -162,9 +162,10 @@ class CoAPSM:
         print (rule)
         if (rule != None):
             result = struct.pack('!B', rule["ruleid"]) # start with the ruleid
-            res =            self.comp.apply(fields, rule["content"], "up", data)
-            print("compressed = ", binascii.hexlify(res))
-            result += res
+            res =            self.comp.apply(fields, rule["content"], "up")
+            print("compressed = ", binascii.hexlify(res.buffer()))
+            res.add_bytes(data)
+            result += res.buffer()
 
             print("Compressed Header = ", result)
 
@@ -258,12 +259,11 @@ class CoAPSM:
                     if (decRule == None):
                         print("No Rule")
                     else:
-                        resPktLength = 0
                         resPkt = bytearray(b'')
                         CoAPResp = bytearray(b'')
 
                         respPkt, respPktLength = self.dec.apply(respCompCoap, decRule, "dw")
-                        print ("decompressing ", respPkt, '/', resPktLength)
+                        print ("decompressing ", respPkt, '/', respPktLength)
 
                         IPv6Header = respPkt [0:40]
                         UDPHeader  = respPkt [40:48]

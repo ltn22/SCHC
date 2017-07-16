@@ -20,6 +20,7 @@ import struct
 from re import search
 from RuleMngt import RuleManager
 import binascii
+import BitBuffer
 
 class Compressor:
 
@@ -27,10 +28,6 @@ class Compressor:
         self.RuleMngt = RM
 
         self.context = []
-        self.eBuf = bytearray(b'') # bad naming used also to uncompress header
-        self.iBuf       = bytearray(b'')
-        self.eIdx = 0           # in bits, where to add the next bit
-        self.iIdx   = 0           # ib bits, where to read for decompression
 
         self.CompressionActions = {
             "not-sent" : self.CA_notSent,
@@ -41,10 +38,10 @@ class Compressor:
             "compute-checksum" : self.CA_notSent
         }
 
-    def CA_notSent(self, TV, FV, length, nature, arg):
+    def CA_notSent(self, buf, TV, FV, length, nature, arg):
         return
 
-    def CA_valueSent(self, TV, FV, length, nature, arg):
+    def CA_valueSent(self, buf, TV, FV, length, nature, arg):
         print('\tvalue-sent ', FV, ' ', length, ' ', arg)
 
         if (nature == "variable"):
@@ -57,7 +54,7 @@ class Compressor:
                 return
 
             for pos in range (3, -1, -1):
-                self.addBit(byteLength & (1 << pos))
+                buf.add_bit(byteLength & (1 << pos))
 
             # print("Variable ", byteLength)
 
@@ -74,7 +71,7 @@ class Compressor:
             for pos in range (octet, 4):
                 for bitPos in range (offset, -1, -1):
                     msk = (1 << bitPos)
-                    self.addBit(FVbitmap[pos] & msk )
+                    buf.add_bit(FVbitmap[pos] & msk )
                     offset = 7
 
         elif type(FV) is str:
@@ -82,13 +79,13 @@ class Compressor:
             for i in range (0, len(FVbitmap)):
                 for bitPos in range (7, -1, -1):
                     msk = (1 << bitPos)
-                    self.addBit(FVbitmap[i] & msk )
+                    buf.add_bit(FVbitmap[i] & msk )
 
         else:
             print('bad type')
             return
 
-    def CA_mappingSent(self, TV, FV, length, nature,arg):
+    def CA_mappingSent(self, buf, TV, FV, length, nature,arg):
         # print( "\tCA match-mapping", type(TV))
         if type(TV) is dict:
             print ('not implemented')
@@ -114,45 +111,25 @@ class Compressor:
                 idx += 1
 
             # print ('found elm ', idx)
-            self.CA_valueSent (TV, idx, bitNb, "fixed", None)
+            self.CA_valueSent (buf, TV, idx, bitNb, "fixed", None)
 
         else:
             return False
 
 
-    def CA_LSB(self, TV, FV, length, nature, arg):
+    def CA_LSB(self, buf, TV, FV, length, nature, arg):
         # print ('\tLSB', FV, 'length :', length, "nature ", nature, " arg ", arg)
         if type(FV) is int:
-            self.CA_valueSent (TV, FV, arg, nature, None)
+            self.CA_valueSent (buf, TV, FV, arg, nature, None)
         elif type(FV) is str:
             octet = int((length - arg) / 8)
-            self.CA_valueSent(TV, FV[octet:], arg, nature, None)
+            self.CA_valueSent(buf, TV, FV[octet:], arg, nature, None)
         else:
             print("not known")
             return
 
-    def addBit (self, b): # add a bit to the compressed buffer. if b == 0 bit = 0; bit =1 otherwise
-        octet = int(self.eIdx / 8)
-        offset = int (7 - self.eIdx % 8)
-
-        if len(self.eBuf) < (octet + 1):
-            self.eBuf.append(0)
-
-        if (b != 0):
-            self.eBuf[octet] |= (1 << offset)
-
-        self.eIdx += 1
-
-        for i in range (0, len(self.eBuf)):
-            print ("{0:08b}".format(self.eBuf[i]), end=" ")
-        print('/', self.eIdx)
-
-
-
-
-    def apply (self, headers, rule, direction, data):
-        self.eBuf = bytearray(b'')
-        self.eIdx = 0
+    def apply (self, headers, rule, direction):
+        buf = BitBuffer.BitBuffer()
 
         for entry in rule:
             FID = entry[0]
@@ -189,20 +166,11 @@ class Compressor:
 
 # CA must be cleaned of argument MSB(4) => MSB and arg = 4
                 # print ('Call {0:10s} TV = '.format(CA), TV, ' FV = ', FV)
-                self.CompressionActions[CA](TV, FV, fieldLength, fixvar, arg)
+                self.CompressionActions[CA](buf, TV, FV, fieldLength, fixvar, arg)
 
         # print ("Compressor returns ", end='[]')
         # print(binascii.hexlify(self.eBuf), end=']')
-
-        # Add data
-
-        for octet in data:
-            print ("add data byte", octet)
-            for b in range (7, -1, -1):
-                bit = octet & (1 << b)
-                self.addBit(bit)
-
-        return self.eBuf
+        return buf
 
 
 #
