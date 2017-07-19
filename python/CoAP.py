@@ -134,34 +134,46 @@ class MsgInWait:
 
         print ( binascii.hexlify( self.comprimed ) )
 
+def increase_lora_delivary_chances(element):
+    if (element.attempts == 2): element.DR = 4
+    elif (element.attempts == 4): element.DR = 2
+
+    element.socket.setsockopt(socket.SOL_LORA, socket.SO_DR, element.DR)
+
+increase_delivary_chances_functions = {
+  "LORAWAN": increase_lora_delivary_chances,
+  "SIGFOX": lambda el: None,
+}
+
 class CoAPSM:
 
-    def __init__ ( self, p, c, d, ipv6s, ipv6d ):
+    def __init__ (self, p, c, d, ipv6s, ipv6d,  idcf):
         self.toBeAcked = []
         self.parser = p
         self.comp = c
         self.dec = d
         self.IPv6_source = ipv6s
-        self.IPv6_dest = ipv6d
+        self.IPv6_dest   = ipv6d
+        self.increase_delivary_chances = idcf
 
-    def send( self, sock, msg, timeout = 0 ):
-        print ( "TIME= ", time.time(), end = " " )
-        print ( "ADD ", msg.mid, end = ' ' )
-        print ( 'IN ', timeout )
+    def send(self,  sock,  msg,  timeout=0):
+        print ("TIME= ", time.time(),  end =" ")
+        print ("ADD ",  msg.mid,  end=' ')
+        print ('IN ',  timeout)
 
-        IPv6 = self.IP_UDP( self.IPv6_source, self.IPv6_dest, 5684, 5684, msg.buffer )
+        IPv6 = self.IP_UDP(self.IPv6_source,  self.IPv6_dest,  5682,  5683,  msg.buffer)
 
-        print ( IPv6 )
-        print ( binascii.hexlify( IPv6 ) )
-        fields, data = self.parser.parser( IPv6 )
-        print ( fields )
-        rule = self.comp.RuleMngt.FindRuleFromHeader ( fields, "up" )
-        print ( rule )
-        if ( rule != None ):
-            result = struct.pack( '!B', rule["ruleid"] )  # start with the ruleid
-            res = self.comp.apply( fields, rule["content"], "up" )
-            print( "compressed = ", binascii.hexlify( res.buffer() ) )
-            res.add_bytes( data )
+        print (IPv6)
+        print (binascii.hexlify(IPv6))
+        fields, data = self.parser.parser(IPv6)
+        print (fields)
+        rule = self.comp.RuleMngt.FindRuleFromHeader (fields, "up")
+        print (rule)
+        if (rule != None):
+            result = struct.pack('!B', rule["ruleid"]) # start with the ruleid
+            res =            self.comp.apply(fields, rule["content"], "up")
+            print("compressed = ", binascii.hexlify(res.buffer()))
+            res.add_bytes(data)
             result += res.buffer()
 
             print( "Compressed Header = ", result )
@@ -201,8 +213,11 @@ class CoAPSM:
                     # No ack remove from the list
                     self.acked( element.msg )
 
-                element.socket.setblocking( True )
-                element.socket.settimeout( 20 )
+                if element.attempts > 0:
+                    self.increase_delivary_chances(element)
+
+                element.socket.setblocking(True)
+                element.socket.settimeout(10)
 
                 print( "sending: ", end = "" )
                 print( binascii.hexlify( element.comprimed ), end = ' ' )
