@@ -3,16 +3,24 @@ import re
 import struct
 
 def MO_ignore( TV, FV, length, arg = None ):
+    """Matching Operator ignore, return true for any Target Value"""
 #    print( "\tignore" )
     return True
 
 def MO_equal( TV, FV, length, arg = None ):
+    """"Matching Operator equal. Compare Target Value and Field Value,
+    return False if type are different or if value are different. """
     # print( "\tequal ", type( TV ), ' ', type( FV ) )
     if ( type( TV ) != type( FV ) ):
         return False
     return TV == FV
 
 def MO_matchmapping( TV, FV, length, arg = None ):
+    """Matching Operator match-mapping, can be used with number and string.
+    length is given is bits, arg is not used.
+    Target value can either be list or dictionnary, return True if the
+    FV is found in one element of the TV.
+    """
     # print( "\tmatch-mapping", type(TV))
     if type(TV) is dict:
         for mappingID, mappingValue in TV.items():
@@ -32,6 +40,13 @@ def MO_matchmapping( TV, FV, length, arg = None ):
         return False
 
 def MO_MSB( TV, FV, length, arg = None ):
+    """Matching Operator MSB (Most Significant Bits)
+    - accept string and numbers
+    - length is the size of field and arg is the number of bits that should be
+    checked.
+
+    return true if the left arg bits are the same in TV and FV """
+
     print( "\tMSB ", type( TV ), ' ', type( FV ), "FV length =", length, ' arg =', arg )
 # dont work on quite long, may be we shouls add this for prefixES
 
@@ -58,7 +73,7 @@ def MO_MSB( TV, FV, length, arg = None ):
         print ('unkwown type ', type(FV))
         return False
 
-    print (TVbitmap, '<===>', FVbitmap)
+#    print (TVbitmap, '<===>', FVbitmap)
 
     idx = 0
     while arg > 0:
@@ -74,6 +89,13 @@ def MO_MSB( TV, FV, length, arg = None ):
     return True
 
 class RuleManager:
+    """This class is used to store rules and retrieve then either by looking
+    at the rule number or field description.
+    A rule is a JSON dictionnary containing:
+    - "ruleid" : rule number.
+    - "devid" : used by the infra SCHC C/D, not mandatory on device.
+    - "content" : a list (array) of fields description.
+    - "upRules" and "downRules": automatically computed when the rule is stored."""
 
     def __init__(self):
         self.context = []
@@ -85,6 +107,7 @@ class RuleManager:
         }
 
     def addRule (self, rule):
+        """Add a rule to the context, ruleid must be unique """
         addedRuleID = rule["ruleid"]
         for r in self.context:
             if (r["ruleid"] == addedRuleID):
@@ -104,6 +127,8 @@ class RuleManager:
         rule["downRules"] = down
 
     def FindRuleFromID (self, ruleid):
+        """ Find a rule form a Rule ID.
+        take into argument a ruleid and return the appropriate rule. """
         for x in self.context:
             print (x)
             if x["ruleid"] == ruleid:
@@ -113,6 +138,8 @@ class RuleManager:
         return None
 
     def FindRuleFromHeader(self, headers, direction):
+        """Find a Rule from a header description given by a parser.
+        direction should be "up" or "down"  """
         for rule in self.context:
             #print('applying rule ', rule)
 
