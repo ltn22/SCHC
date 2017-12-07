@@ -1,4 +1,3 @@
-from Parser import Parser
 import re
 import struct
 
@@ -250,20 +249,3 @@ class RuleManager:
 #                           ["CoAP.Uri-Query",    1,  "up", "k=",               "MSB(16)", "LSB"],
 #                           ["CoAP.Option-End",   1,  "up", 0xFF,               "equal", "not-sent"]
 #                        ]}
-#
-#
-# ipv6 =  bytearray(b'`\x00\x00\x00\x00-\x11\x1e\xfe\x80\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\xfe\x80\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x162\x163\x00-\x00\x00A\x02\x00\x01\x82\xb3foo\x03bar\x06ABCD==Fk=eth0\xff\x82\x19\x0bd\x1a\x00\x01\x8e\x96')
-#
-# p = Parser()
-# f, data = p.parser(ipv6)
-#
-# RM = RuleManager()
-# RM.addRule(rule_coap0)
-# RM.addRule(rule_coap1)
-#
-# print("=====")
-# print("F", f)
-# print (len(f))
-#
-# print ("rule = ", RM.FindRuleFromHeader(f, "up"))
-# print ("rule = ", RM.FindRuleFromID(1))
