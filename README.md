@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/ltn22/SCHC.svg?branch=master)](https://travis-ci.org/ltn22/SCHC)[![Coverage Status](https://coveralls.io/repos/github/ltn22/SCHC/badge.svg?branch=master)](https://coveralls.io/github/ltn22/SCHC?branch=master)
+
 Static Context Header Compression (SCHC, pronounced chic) is a *generic* compression mechanism for LPWAN networks. It is standardized at the IETF.
 
 This implementation applies SCHC to CoAP/UDP/IPv6 headers, but can be extended to other type of fields.
