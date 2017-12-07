@@ -63,7 +63,7 @@ class Parser:
         print ('argument type', type(packet))
 
         # The "IP_version" field is pulled apart
-        firstByte = unpack('!BBHHBBQQQQHHHHBBH', packet)
+        firstByte = unpack('!BBHHBBQQQQHHHHBBH', packet[:52])
         print(firstByte)
         self.header_fields["IPv6.version", 1]      = [firstByte[0] >> 4, 4, 'fixed']
         self.header_fields["IPv6.trafficClass", 1] = [(firstByte[0] & 0x0F) << 4 | (firstByte[1] & 0xF0) >> 4, 8, 'fixed']
@@ -137,10 +137,3 @@ class Parser:
                 raise ValueError("error in CoAP option parsing")
 
         return self.header_fields, None
-
-# #ipv6 = bytearray(b'`\x12\x34\x56\x00\x1e\x11\x1e\xfe\x80\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\xfe\x80\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x162\x163\x00\x1e\x00\x00A\x02\x00\x01\n\xb3foo\xff\x84\x01\x82  &Ehello')
-# ipv6 =  bytearray(b'`\x12\x34\x56\x00\x1e\x11\x1e\xfe\x80\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\xfe\x80\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x162\x163\x00\x1e\x00\x00A\x02\x00\x01\n\xb3foo\x03bar\x06ABCD==Fk=eth0\xff\x84\x01\x82  &Ehello')
-#
-# p = Parser()
-# f = p.parser(ipv6)
-# p.dump()
