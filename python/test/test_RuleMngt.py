@@ -1,5 +1,5 @@
 import pytest
-from .. import RuleMngt
+from SCHC import RuleMngt
 
 def test_MO_ignore():
     assert (RuleMngt.MO_ignore("", "", 0))

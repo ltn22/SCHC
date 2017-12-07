@@ -1,4 +1,4 @@
-from .. import Parser
+from SCHC import Parser
 
 def test___init__():
     parser = Parser.Parser()

@@ -12,11 +12,9 @@ SCHC compressor, Copyright (c) <2017><IMT Atlantique and Philippe Clavier>
     along with this program.  If not, see <http://www.gnu.org/licenses/>
 '''
 
-from Parser import Parser
 import struct
 import re
-from RuleMngt import RuleManager
-import BitBuffer
+from SCHC import BitBuffer
 
 class Decompressor:
 
