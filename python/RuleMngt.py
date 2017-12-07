@@ -26,7 +26,7 @@ def MO_matchmapping( TV, FV, length, arg = None ):
         for mappingID, mappingValue in TV.items():
             if mappingValue == FV:
                 return True
-            return False
+        return False
     elif type(TV) is list:
         for mappingValue in TV:
             # print ('\t', type (mappingValue), '  <=> ', type (FV), end='|')
