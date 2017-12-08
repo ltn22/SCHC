@@ -1,5 +1,5 @@
-from .. import Compressor
-from .. import BitBuffer
+from SCHC import Compressor
+from SCHC import BitBuffer
 
 def test___init__():
     comp = Compressor.Compressor(None)

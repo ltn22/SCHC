@@ -1,4 +1,4 @@
-from .. import BitBuffer
+from SCHC import BitBuffer
 
 def test___init__():
     buf = BitBuffer.BitBuffer()
