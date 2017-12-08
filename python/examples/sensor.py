@@ -39,10 +39,10 @@ from CBOR import CBOR
 
 gc.collect()
 
-from RuleMngt import RuleManager
-from Parser import Parser
-from Compressor import Compressor
-from Decompressor import Decompressor
+from SCHC.RuleMngt import RuleManager
+from SCHC.Parser import Parser
+from SCHC.Compressor import Compressor
+from SCHC.Decompressor import Decompressor
 
 from machine import I2C
 from BMP280 import BMP280
