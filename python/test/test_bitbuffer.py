@@ -1,15 +1,21 @@
+"""
+    Tests SCHC's BitBuffer implementation
+"""
+# pylint: disable=W0212
 from SCHC import BitBuffer
 
 def test___init__():
+    """ tests BitBuffer's constructor"""
     buf = BitBuffer.BitBuffer()
-    assert (len(buf._buf) == 0)
-    assert (buf._bit_index == 0)
+    assert len(buf._buf) == 0 #pylint: disable=len-as-condition
+    assert buf._bit_index == 0
 
 def test___init__with_value():
-    bitValue = b'1011'
-    buf = BitBuffer.BitBuffer(bitValue)
-    assert(len(buf._buf) == len(bitValue))
-    assert(buf._bit_index == 0)
+    """ tests BitBuffer's constructor with a parameter"""
+    bit_value = b'1011'
+    buf = BitBuffer.BitBuffer(bit_value)
+    assert len(buf._buf) == len(bit_value)
+    assert buf._bit_index == 0
 
 #def test_add_bit():
 #    buf = BitBuffer.BitBuffer()
@@ -38,8 +44,9 @@ def test___init__with_value():
 #    assert (True)
 
 def test_buffer():
+    """ tests BitBuffer's buffer function"""
     buf = BitBuffer.BitBuffer(b'01')
-    assert (buf.buffer() == b'01')
+    assert buf.buffer() == b'01'
 
 #def test_size():
 #    buf = BitBuffer.BitBuffer(b'01')
