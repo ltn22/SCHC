@@ -28,12 +28,12 @@ uploadExampleModules:
 
 uploadlib:
 	ampy -p /dev/ttyUSB0 mkdir /flash/SCHC
-	ampy -p /dev/ttyUSB0 put ../SCHC/__init__.py /flash/SCHC/__init__.py
-	ampy -p /dev/ttyUSB0 put ../SCHC/BitBuffer.py /flash/SCHC/BitBuffer.py
-	ampy -p /dev/ttyUSB0 put ../SCHC/Compressor.py /flash/SCHC/Compressor.py
-	ampy -p /dev/ttyUSB0 put ../SCHC/Decompressor.py /flash/SCHC/Decompressor.py
-	ampy -p /dev/ttyUSB0 put ../SCHC/Parser.py /flash/SCHC/Parser.py
-	ampy -p /dev/ttyUSB0 put ../SCHC/RuleMngt.py /flash/SCHC/RuleMngt.py
+	ampy -p /dev/ttyUSB0 put ../../SCHC/__init__.py /flash/SCHC/__init__.py
+	ampy -p /dev/ttyUSB0 put ../../SCHC/BitBuffer.py /flash/SCHC/BitBuffer.py
+	ampy -p /dev/ttyUSB0 put ../../SCHC/Compressor.py /flash/SCHC/Compressor.py
+	ampy -p /dev/ttyUSB0 put ../../SCHC/Decompressor.py /flash/SCHC/Decompressor.py
+	ampy -p /dev/ttyUSB0 put ../../SCHC/Parser.py /flash/SCHC/Parser.py
+	ampy -p /dev/ttyUSB0 put ../../SCHC/RuleMngt.py /flash/SCHC/RuleMngt.py
 
 login:
 	screen -L /tmp/screenlog /dev/ttyUSB0 115200
