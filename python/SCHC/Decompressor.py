@@ -52,6 +52,7 @@ class Decompressor:
             "CoAP.code": [8, "direct"],
             "CoAP.messageID": [16, "direct"],
             "CoAP.token": [8, "direct"],  # MUST be set to TKL value
+            "CoAP.Location-Path" :["variable", {"CoAPOption": 8}],
             "CoAP.Uri-Path" :  ["variable", {"CoAPOption": 11}],
             "CoAP.Content-Format" : ["variable", {"CoAPOption": 12}],
             "CoAP.Uri-Query" : ["variable", {"CoAPOption": 15}],
@@ -116,7 +117,7 @@ class Decompressor:
         elif nature == "fixed":
             if algo == "direct":
                 for i in range( length ):
-                    buff.add_bit( headers.next_bit() )
+                    buf.add_bit( headers.next_bit() )
 
     def DA_mappingSent( self, buf, headers, TV, length, nature, arg, algo ):
         print ( "DA_mappingSent", TV, length, nature, arg, algo )

@@ -34,6 +34,50 @@ var cdf = function(array){
     this.array = array;
 };
 
+var option_names = {
+
+  1: "CoAP.If-Match",
+
+    3: "CoAP.Uri-Host",
+
+    4: "CoAP.ETag",
+
+    5: "CoAP.If-None-Match",
+
+    6: "CoAP.Observe",
+
+    7: "CoAP.Uri-Port",
+
+    8: "CoAP.Location-Path",
+
+    11: "CoAP.Uri-Path",
+
+    12: "CoAP.Content-Format",
+
+    14: "CoAP.Max-Age",
+
+    15: "CoAP.Uri-Query",
+
+    17: "CoAP.Accept",
+
+    20: "CoAP.Location-Query",
+
+    23: "CoAP.Block2",
+
+    27: "CoAP.Block1",
+
+    28: "CoAP.Size2",
+
+    35: "CoAP.Proxy-Uri",
+
+    39: "CoAP.Proxy-Scheme",
+
+    60: "CoAP.Sizel",
+
+    258: "CoAP.No-Response"
+
+};
+
 cdf.prototype.computeOption = function (Type, Value, Length) {
     Length = Math.floor(Length/8)
     if (Value.length != Length) {
@@ -234,11 +278,11 @@ cdf.prototype.CA_valueSent = function (that, TV, FV, length, nature, arg) {
 		console.log ("error on length for ", FV)
 		return false
 	    }
-	    
-	    for (var l = 0; l < length; l++) {
-		for (var b = 7; b >= 0; b--) {
-		    bit = FV & (1 << b)
-		    that.seteBufBit(bin)
+	    for (var i = 0; i < FV.length; i++) {
+	    	for (var b = 7; b >=0 ; b--){
+			bit = FV.charCodeAt(i) & (1<<b)
+
+			that.seteBufBit(bit)
 		}
 	    }
 	    
@@ -450,7 +494,9 @@ cdf.prototype.initializeCD = function(){
         "CoAP.code": [8, "direct"],
         "CoAP.messageID": [16, "direct"],
         "CoAP.token": [8, "direct"],   // MUST be set to TKL value
+	"CoAP.Location-Path": ["variable", {"CoAPOption": 8}],
 	"CoAP.Uri-Path" :  ["variable", {"CoAPOption": 11}],
+	"CoAP.Content-Format" :  ["variable", {"CoAPOption": 12}],
 	"CoAP.Uri-Query" : ["variable", {"CoAPOption": 15}],
 	"CoAP.Option-End" : [8, "direct"]
     }
@@ -676,7 +722,7 @@ cdf.prototype.find_rule_from_pkt = function (headers, direction)
 
 cdf.prototype.parser = function (pkt) {
 
-    var field_poistion= {}
+    var field_position= []
     var header_fields = []
 
 // ES and LA are inverted compared to python code
@@ -716,48 +762,40 @@ cdf.prototype.parser = function (pkt) {
     option_number = 0
 
     while (pos < pkt.length) {
-	if (pkt[pos] == 0xFF) break;
+      if (parseInt(pkt[pos]) == 0xFF) break;
 
-	console.log('COAP OPTION NOT PROCESSED')
-	deltaTL = pkt[pos]
-	pos += 1
+      deltaTL = parseInt(pkt[pos]);
+      pos += 1;
+      deltaT = (deltaTL & 0xF0) >> 4;
+      // /!\ add long value
+      option_number += parseInt(deltaT);
+
+      L = parseInt(deltaTL & 0x0F);
+      // /!\ add long values
+
+      option_value = ''
+
+      for (var i = 0; i < L; i++) {
+        option_value += String.fromCharCode(pkt[pos]);
+        pos += 1;
+        // /!\ check if max length is reached
+      }
+	if (header_fields[option_names[option_number]] == null) {
+		header_fields[option_names[option_number]] = [[option_value, L*8,  "variable"]];
+	} else {
+      		header_fields[option_names[option_number]].push([option_value, L*8,  "variable"]);
+	}
     }
-
-    
-    return [header_fields, this.eBuf.slice(pos)]
-    /* TO BE TRANSLATED IN JS
-
-        option_number = 0[
-        while (pos < len(packet)):
-            if (int(packet[pos]) == 0xFF): break
-
-            deltaTL = int(packet[pos])
-            pos += 1
-            deltaT = (deltaTL & 0xF0) >> 4
-            # /!\ add long value
-            option_number += int(deltaT)
-
-            L = int(deltaTL & 0x0F)
-            # /!\ add long values
-
-            try:
-                field_position[option_number] += 1
-            except:
-                field_position[option_number] = 1
-
-            option_value = ''
-
-            for i in range (0, L):
-                option_value += chr(packet[pos])
-                pos += 1
-                # /!\ check if max length is reached
-
-            self.header_fields[option_names[option_number], field_position[option_number]] = [option_value, L*8,  "variable"]
-
-*/
-
-
-
+   	if (pos < pkt.length) {
+		if (parseInt(pkt[pos]) == 0xFF) {
+			header_fields["CoAP.Option-End"] = [[0xFF, 8, "fixed"]];
+			pos += 1;
+			return [header_fields, this.eBuf.slice(pos)]
+		} else {
+			alert("error in CoAP option parsing")
+		}
+	}
+	return [header_fields, this.eBuf.slice(pos)]
 }
 
 cdf.prototype.apply = function (rule, headers, direction) {
