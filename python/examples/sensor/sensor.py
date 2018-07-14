@@ -14,6 +14,9 @@ SCHC compressor, Copyright (c) <2017><IMT Atlantique and Philippe Clavier>
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>
 '''
+import os
+import sys
+sys.path.insert(0, '/flash/examples/sensor')
 
 SIGFOX = False
 LORAWAN = not SIGFOX
@@ -208,8 +211,8 @@ if LORAWAN:
     s.bind(0x02);
 
     # set the LoRaWAN data rate
-    s.setsockopt(socket.SOL_LORA, socket.SO_DR, 5)
-    s.setsockopt(socket.SOL_LORA,  socket.SO_CONFIRMED,  False)
+    s.setsockopt(socket.SOL_LORA, socket.SO_DR, 0)
+    s.setsockopt(socket.SOL_LORA, socket.SO_CONFIRMED,  False)
 
     print("apres setsock")
     # make the socket blocking
