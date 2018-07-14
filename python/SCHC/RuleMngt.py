@@ -117,7 +117,7 @@ class RuleManager:
         up = 0;
         down = 0;
         for entry in rule["content"]:
-            if (entry[2] == "bi") or (entry[2] == "do"): down += 1
+            if (entry[2] == "bi") or (entry[2] == "dw"): down += 1
             if (entry[2] == "bi") or (entry[2] == "up"): up += 1
 
         #print(self.context)
@@ -129,7 +129,6 @@ class RuleManager:
         """ Find a rule form a Rule ID.
         take into argument a ruleid and return the appropriate rule. """
         for x in self.context:
-            print (x)
             if x["ruleid"] == ruleid:
                 return x
 
@@ -145,7 +144,7 @@ class RuleManager:
             print("looking for size ", len(headers)," ", rule["upRules"], ' ', rule["downRules"])
             #not the good number of rules, try the next
             if (direction == "up" and len(headers) != rule["upRules"]): continue
-            if (direction == "down" and len(header) != rule["downRules"]): continue
+            if (direction == "dw" and len(headers) != rule["downRules"]): continue
 
             # Looking MO
             foundEntries = 0
@@ -184,7 +183,7 @@ class RuleManager:
             print("Found ", foundEntries, " among ", len(headers), ' ', rule["upRules"], ' ', rule["downRules"])
             if (direction == "up" and foundEntries == rule["upRules"]):
                   return rule
-            if (direction == "down" and foundEntries == rule["downRules"]):
+            if (direction == "dw" and foundEntries == rule["downRules"]):
                   return rule
 
         print ("No rule matches header")
