@@ -1,0 +1,43 @@
+import requests
+import base64
+import time
+import json
+import logging
+
+import http.client
+
+http.client.HTTPConnection.debuglevel = 1
+
+logging.basicConfig()
+logging.getLogger().setLevel(logging.DEBUG)
+requests_log = logging.getLogger("requests.packages.urllib3")
+requests_log.setLevel(logging.DEBUG)
+requests_log.propagate = True
+
+
+destinationDevEUI = "70b3d54995bd3c5d"
+url = "https://core.acklio.net:8080/v1/devices/"+destinationDevEUI+"/send"
+
+print (url)
+
+dwnCnt = 0
+
+while True:
+    payload = b"downlink #{}"
+    dwnCnt += 1
+
+    answer = {
+        "fPort" : 2,
+        "devEUI" : destinationDevEUI,
+        "data": base64.b64encode(payload).decode('utf-8')
+    }
+
+    
+    cookieContent = {"access_token":"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1MjU0Mzc0OTIsInVzZXJJbmZvIjp7ImFkbWluIjpmYWxzZSwidXNlcm5hbWUiOiJNT09DLVBMSURPIn19.EuhMiOY20-DCFiJK4hO10baYf62nIlvw4HdeoySeD5N653EGODFlxAkKT4ZSCRojejcy6YkD7OsnRSrfJXOZkU0bgfvni0HAP_SF2QiOj-VZCP04UEFIt44NURK713BKo0bBygldEtIx0uoqLUflZvChipZ5iEF2aR2nV71YaHBU937e04cJh084kyx8kKS0-CPnxvNS1y-F2Fla6oNpSpTrGZLar_pFsvlLhcWOgDTS4SvTbM2t0QTFBmO7XCCQ835bV6ZiWTxYKEl9knotO6zmZ97UrwsZy1_PAqY0joWlUnpcIYWoms2CiUNbhUAzl_SrR3NqCAnRhnVpvfAyww"};
+                                   
+
+    print (cookieContent)
+    
+    print (requests.post(url, data=json.dumps(answer), cookies=cookieContent))
+
+    time.sleep(60)
