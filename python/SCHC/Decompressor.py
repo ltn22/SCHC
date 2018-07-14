@@ -59,19 +59,49 @@ class Decompressor:
             "CoAP.Option-End" : [8, "direct"]
         }
 
-    def compute_CoAPOption ( type, length, value ):
+    def compute_CoAPOption (self, buf,  optType, length, value ):
         print( "Not implemented" )
+        print ("current type = ", self.opt_num, "type =", optType, "length = ", length, "value =", value)
+
+        deltaT = optType - self.opt_num
+        self.opt_num = optType
+
+        lengthByte = length // 8
+        print ("lengthByte = ", lengthByte)
+
+        if (deltaT > 14) or (lengthByte > 14):
+            print ("Not implemented Type or Length too big")
+            return
+
+        firstByte = (deltaT << 4) | lengthByte
+        print ("first Byte =", hex(firstByte))
+        buf.add_byte (firstByte)
+        
+        buf.add_bytes(bytes(value, encoding='utf-8'))
+        
         return
 
     def DA_notSent( self, buf, headers, TV, length, nature, arg, algo ):
-        print ( "DA_notSent", TV, length, nature, arg, algo )
+        print ( "DA_notSent", TV, length, nature, arg, "algoo=", algo )
 
         if ( nature == "variable" ):
+            print ("TV=", TV, len(TV))
             length = len( TV ) * 8
 
+        
         if ( type( TV ) is int ):
             for i in range ( length - 1, -1, -1 ):
                 buf.add_bit( TV & ( 1 << i ) )
+        elif type (TV) is str:
+            if algo == "direct":
+                print ("Direct not implemented")
+                
+            elif "CoAPOption" in algo:
+                print ("CoAP Option")
+                self.compute_CoAPOption (buf, algo["CoAPOption"], length, TV)
+            else:
+                print ("algo", algo, "Not implemented")
+                
 
     def DA_valueSent( self, buf, headers, TV, length, nature, arg, algo ):
         print ( "DA_notSent", TV, length, nature, arg, algo )
@@ -223,7 +253,7 @@ class Decompressor:
 
                 algo = self.field_size[FID][1]
 
-                # print ("DECOMPRESSION: ", "FID = ", FID, " ", DA, " TV= ", TV, " size= ", size, " nature = ", nature, " arg = ", arg)
+                print ("DECOMPRESSION: ", "FID = ", FID, " DA = ", DA, " TV= ", TV, " size= ", size, " nature = ", nature, " arg = ", arg)
 
                 self.DecompressionActions[DA]( buf, headersBuf, TV, size, nature, arg, algo )
 
