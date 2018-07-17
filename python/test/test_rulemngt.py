@@ -72,8 +72,8 @@ def test_addrule():
                 # fID, Pos, DI, TV, MO, CDA
                 ["field1", 1, "bi", 6, "equal", "not-sent"],
                 ["field2", 1, "up", 6, "equal", "not-sent"],
-                ["field3", 1, "do", 6, "equal", "not-sent"],
-                ["field4", 1, "do", 6, "equal", "not-sent"],
+                ["field3", 1, "dw", 6, "equal", "not-sent"],
+                ["field4", 1, "dw", 6, "equal", "not-sent"],
             ]
            }
     mgr.addRule(rule)
@@ -92,8 +92,8 @@ def test_addrule_doubleid():
                 # fID, Pos, DI, TV, MO, CDA
                 ["field1", 1, "bi", 6, "equal", "not-sent"],
                 ["field2", 1, "up", 6, "equal", "not-sent"],
-                ["field3", 1, "do", 6, "equal", "not-sent"],
-                ["field4", 1, "do", 6, "equal", "not-sent"],
+                ["field3", 1, "dw", 6, "equal", "not-sent"],
+                ["field4", 1, "dw", 6, "equal", "not-sent"],
             ]
            }
     mgr.addRule(rule)
@@ -112,8 +112,8 @@ def test_findrulefromid():
                 # fID, Pos, DI, TV, MO, CDA
                 ["field1", 1, "bi", 6, "equal", "not-sent"],
                 ["field2", 1, "up", 6, "equal", "not-sent"],
-                ["field3", 1, "do", 6, "equal", "not-sent"],
-                ["field4", 1, "do", 6, "equal", "not-sent"],
+                ["field3", 1, "dw", 6, "equal", "not-sent"],
+                ["field4", 1, "dw", 6, "equal", "not-sent"],
             ]
            }
     mgr.addRule(rule)
