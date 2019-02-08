@@ -54,7 +54,7 @@ class Parser:
         for e, v in self.header_fields:
             print ("{0:20} {1:3} ".format(e, v), self.header_fields[e, v])
 
-    def parser(self, packet, direction="up"):
+    def parser(self, packet, direction="up", protocol="coap"):
 #        self.sepacketHexaContent = packet
         field_position = {}
         # The complete trame content in printed
@@ -63,51 +63,63 @@ class Parser:
         print ('argument type', type(packet))
 
         self.header_fields = {}
+
+        if protocol != "coap":
+            # The "IP_version" field is pulled apart
+            firstByte = unpack('!BBHHBBQQQQHHHHBBH', packet[:52])
+            print(firstByte)
         
-        # The "IP_version" field is pulled apart
-        firstByte = unpack('!BBHHBBQQQQHHHHBBH', packet[:52])
-        print(firstByte)
-        self.header_fields["IPv6.version", 1]      = [firstByte[0] >> 4, 4, 'fixed']
-        self.header_fields["IPv6.trafficClass", 1] = [(firstByte[0] & 0x0F) << 4 | (firstByte[1] & 0xF0) >> 4, 8, 'fixed']
-        self.header_fields["IPv6.flowLabel", 1]    = [(firstByte[1] & 0x0F ) << 16 | firstByte[2], 20, 'fixed']
-        self.header_fields["IPv6.payloadLength", 1]= [firstByte[3], 16, 'fixed']
-        self.header_fields["IPv6.nextHeader", 1]   = [firstByte[4], 8, 'fixed']
-        self.header_fields["IPv6.hopLimit", 1]     = [firstByte[5], 8, 'fixed']
+            self.header_fields["IPv6.version", 1]      = [firstByte[0] >> 4, 4, 'fixed']
+            self.header_fields["IPv6.trafficClass", 1] = [(firstByte[0] & 0x0F) << 4 | (firstByte[1] & 0xF0) >> 4, 8, 'fixed']
+            self.header_fields["IPv6.flowLabel", 1]    = [(firstByte[1] & 0x0F ) << 16 | firstByte[2], 20, 'fixed']
+            self.header_fields["IPv6.payloadLength", 1]= [firstByte[3], 16, 'fixed']
+            self.header_fields["IPv6.nextHeader", 1]   = [firstByte[4], 8, 'fixed']
+            self.header_fields["IPv6.hopLimit", 1]     = [firstByte[5], 8, 'fixed']
 
-        if direction == "up":
-            self.header_fields["IPv6.prefixES", 1]     = [firstByte[6], 64, 'fixed']
-            self.header_fields["IPv6.iidES", 1]        = [firstByte[7], 64, 'fixed']
-            self.header_fields["IPv6.prefixLA", 1]     = [firstByte[8], 64, 'fixed']
-            self.header_fields["IPv6.iidLA", 1]        = [firstByte[9], 64, 'fixed']
-        elif direction == "dw":
-            self.header_fields["IPv6.prefixLA", 1]     = [firstByte[6], 64, 'fixed']
-            self.header_fields["IPv6.iidLA", 1]        = [firstByte[7], 64, 'fixed']
-            self.header_fields["IPv6.prefixES", 1]     = [firstByte[8], 64, 'fixed']
-            self.header_fields["IPv6.iidES", 1]        = [firstByte[9], 64, 'fixed']
-        else:
-            raise ValueError ("unknwon direction")
+            if direction == "up":
+                self.header_fields["IPv6.prefixES", 1]     = [firstByte[6], 64, 'fixed']
+                self.header_fields["IPv6.iidES", 1]        = [firstByte[7], 64, 'fixed']
+                self.header_fields["IPv6.prefixLA", 1]     = [firstByte[8], 64, 'fixed']
+                self.header_fields["IPv6.iidLA", 1]        = [firstByte[9], 64, 'fixed']
+            elif direction == "dw":
+                self.header_fields["IPv6.prefixLA", 1]     = [firstByte[6], 64, 'fixed']
+                self.header_fields["IPv6.iidLA", 1]        = [firstByte[7], 64, 'fixed']
+                self.header_fields["IPv6.prefixES", 1]     = [firstByte[8], 64, 'fixed']
+                self.header_fields["IPv6.iidES", 1]        = [firstByte[9], 64, 'fixed']
+            else:
+                raise ValueError ("unknwon direction")
 
-        if firstByte[4] != 17:
-            raise ValueError("IPv6 Proto unknown")
+            if firstByte[4] != 17:
+                raise ValueError("IPv6 Proto unknown")
 
-        if direction == "up":
-            self.header_fields["UDP.PortES", 1]      = [firstByte[10], 16, 'fixed']
-            self.header_fields["UDP.PortLA", 1]      = [firstByte[11], 16, 'fixed']
-        elif direction == "dw":
-            self.header_fields["UDP.PortLA", 1]      = [firstByte[10], 16, 'fixed']
-            self.header_fields["UDP.PortES", 1]      = [firstByte[11], 16, 'fixed']
-        else:
+            if direction == "up":
+                self.header_fields["UDP.PortES", 1]      = [firstByte[10], 16, 'fixed']
+                self.header_fields["UDP.PortLA", 1]      = [firstByte[11], 16, 'fixed']
+            elif direction == "dw":
+                self.header_fields["UDP.PortLA", 1]      = [firstByte[10], 16, 'fixed']
+                self.header_fields["UDP.PortES", 1]      = [firstByte[11], 16, 'fixed']
+            else:
                 raise ValueError("Unknown direction")
         
-        self.header_fields["UDP.length", 1]      = [firstByte[12], 16, 'fixed']
-        self.header_fields["UDP.checksum", 1]    = [firstByte[13], 16, 'fixed']
-        self.header_fields["CoAP.version", 1]    = [firstByte[14] >> 6, 2, 'fixed']
-        self.header_fields["CoAP.type", 1]       = [(firstByte[14] & 0x30) >> 4, 2, 'fixed']
-        self.header_fields["CoAP.tokenLength", 1]= [firstByte[14] & 0x0F, 4, 'fixed']
-        self.header_fields["CoAP.code", 1]       = [firstByte[15], 8, 'fixed']
-        self.header_fields["CoAP.messageID", 1]  = [firstByte[16], 16, 'fixed']
-        pos = 52 # next byte in packet
-
+            self.header_fields["UDP.length", 1]      = [firstByte[12], 16, 'fixed']
+            self.header_fields["UDP.checksum", 1]    = [firstByte[13], 16, 'fixed']
+            self.header_fields["CoAP.version", 1]    = [firstByte[14] >> 6, 2, 'fixed']
+            self.header_fields["CoAP.type", 1]       = [(firstByte[14] & 0x30) >> 4, 2, 'fixed']
+            self.header_fields["CoAP.tokenLength", 1]= [firstByte[14] & 0x0F, 4, 'fixed']
+            self.header_fields["CoAP.code", 1]       = [firstByte[15], 8, 'fixed']
+            self.header_fields["CoAP.messageID", 1]  = [firstByte[16], 16, 'fixed']
+            pos = 52 # next byte in packet
+        else: 
+            firstByte=unpack('!BBH',packet[:4])
+            self.header_fields["CoAP.version", 1]    = [firstByte[0] >> 6, 2, 'fixed']
+            self.header_fields["CoAP.type", 1]       = [(firstByte[0] & 0x30) >> 4, 2, 'fixed']
+            self.header_fields["CoAP.tokenLength", 1]= [firstByte[0] & 0x0F, 4, 'fixed']
+            self.header_fields["CoAP.code", 1]       = [firstByte[1], 8, 'fixed']
+            self.header_fields["CoAP.messageID", 1]  = [firstByte[2], 16, 'fixed']
+            pos=4 
+    
+    
+    
         token = int(0)
         for i in range(0, self.header_fields["CoAP.tokenLength", 1][0]):
             token <<= 8
@@ -116,18 +128,21 @@ class Parser:
         self.header_fields["CoAP.token", 1] = [token, self.header_fields["CoAP.tokenLength", 1][0]*8, 'fixed']
 
         option_number = 0
+
+        print("Length of the packet", len(packet))
         while (pos < len(packet)):
-            print (">>>>", self.header_fields)
+            print ("First>>>>", self.header_fields)
+            print("Packet>>>", int(packet[pos]))
             if (int(packet[pos]) == 0xFF): break
 
             deltaTL = int(packet[pos])
             pos += 1
             deltaT = (deltaTL & 0xF0) >> 4
-            # /!\ add long value
+                # /!\ add long value
             option_number += int(deltaT)
 
             L = int(deltaTL & 0x0F)
-            # /!\ add long values
+                # /!\ add long values
 
             try:
                 field_position[option_number] += 1
@@ -139,7 +154,7 @@ class Parser:
             for i in range (0, L):
                 option_value += chr(packet[pos])
                 pos += 1
-                # /!\ check if max length is reached
+                    # /!\ check if max length is reached
                 
             try:
                 self.header_fields[option_names[option_number], field_position[option_number]] = [option_value, L*8,  "variable"]

@@ -53,7 +53,8 @@ class Message:
     def __dump_buffer( self ):
         """Dumps the content of the message as hexa"""
         for bytes in self.buffer:
-            print ( hex( bytes ), end = '-' )
+            print ( hex( bytes ))
+                    #end = '-' )
 
     def new_header ( self, type = CON, code = GET, token = 0x12, midSize = 16 ):
         "Creates a new message header"
@@ -90,6 +91,11 @@ class Message:
         self.__add_option_TL( 11, len( path ) )
         self.buffer += path
 
+    def add_option_proxyuri( self, uri = '' ):
+        self.__add_option_TL( 35, len( uri ) )
+        self.buffer += uri
+
+   
     def add_option_query( self, query = '' ):
         "Adds a CoAP query to the message"
         self.__add_option_TL( 15, len( query ) )
