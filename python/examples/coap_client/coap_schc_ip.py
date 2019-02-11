@@ -33,7 +33,7 @@ def compress_and_send():
 
     print("Coap message size",len(coap_message.buffer))
 
-    fields, data=  PARSER.parser(coap_message.buffer,"coap")
+    fields, data=  PARSER.parser(coap_message.buffer,protocol="coap")
     rule = COMP.RuleMngt.FindRuleFromHeader(fields, "up")
     data =b'T=30.4'
 

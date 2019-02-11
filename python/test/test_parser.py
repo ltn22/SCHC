@@ -31,6 +31,6 @@ def test_parser():
 foo\x03bar\x06ABCD==Fk=eth0\xff\x84\x01\
 \x82  &Ehello""")
     parser = Parser.Parser()
-    _, payload = parser.parser(ipv6,"")
+    _, payload = parser.parser(ipv6, protocol="")
 
     assert payload == b'\x84\x01\x82  &Ehello'
