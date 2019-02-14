@@ -83,6 +83,9 @@ class Message:
         if ( delta < 13 ) and ( L < 13 ) is True:
             self.buffer += struct.pack( 'B', ( delta << 4 ) | L )
         else:
+            self.buffer +=struct.pack('B', (221))
+            self.buffer +=struct.pack('B', (T-13))
+            self.buffer += struct.pack( 'B', (L-13))
             print( 'Not Done' )
 
 

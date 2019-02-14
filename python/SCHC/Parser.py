@@ -143,6 +143,13 @@ class Parser:
 
             L = int(deltaTL & 0x0F)
                 # /!\ add long values
+           
+            if deltaT ==0xd and L == 0xd: 
+                deltaT+= int(packet[pos])
+                option_number =int(deltaT)
+                pos+=1
+                L +=int(packet[pos])
+                pos+=1
 
             try:
                 field_position[option_number] += 1

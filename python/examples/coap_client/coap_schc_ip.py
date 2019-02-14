@@ -26,9 +26,9 @@ COMP = Compressor(RM)
 def compress_and_send():
     """ compress only coap part""" 
     coap_message = CoAP.Message()
-    coap_message.new_header(type=CoAP.NON, code=CoAP.POST, midSize=4, token=0x82)
+    coap_message.new_header(type=CoAP.NON, code=CoAP.POST, midSize=8, token=0x82)
     coap_message.add_option_path(b'temperature')
-    ##coap_message.add_option_proxyuri(b'coap://[2001:db8:0:f102::1]:5683')
+    coap_message.add_option_proxyuri(b'coap://[2001:db8:0:f102::1]:5683')
     coap_message.end_option()
 
     print("Coap message size",len(coap_message.buffer))

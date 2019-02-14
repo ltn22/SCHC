@@ -142,9 +142,10 @@ RULE_COMPRESS_COAP = {\
                          ["CoAP.type", 1, "bi", 1, "equal", "not-sent"],
                          ["CoAP.tokenLength", 1, "bi", 1, "equal", "not-sent"],
                          ["CoAP.code", 1, "bi", 2, "equal", "not-sent"],
-                         ["CoAP.messageID", 1, "bi", 1, "MSB(4)", "LSB"],
-                         ["CoAP.token", 1, "bi", 0x82, "equal", "not-sent"],
+                         ["CoAP.messageID", 1, "bi", 5,"ignore", "value-sent"],
+                         ["CoAP.token", 1, "bi", 0x82, "ignore", "value-sent"],
                          ["CoAP.Uri-Path", 1, "up", "temperature", "equal", "not-sent"],
+                         ["CoAP.Proxy-Uri", 1, "up", "coap://[2001:db8:0:f102::1]:5683", "equal", "not-sent"],
                          ["CoAP.Option-End", 1, "up", 0xFF, "equal", "not-sent"]
                         ]
                     }
