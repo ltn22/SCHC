@@ -1,5 +1,5 @@
 # pylint: disable=import-error
-# - Module paths fixed at upload by Makefile
+# Module paths fixed at upload by Makefile
 '''
 SCHC compressor, Copyright (c) <2017><IMT Atlantique and Philippe Clavier>
 
@@ -22,6 +22,8 @@ SCHC compressor, Copyright (c) <2017><IMT Atlantique and Philippe Clavier>
         - The IPv6 layer only
         - The IPv6 and UDP layers
         - All layers
+
+        
 '''
 import CoAP
 
@@ -134,3 +136,17 @@ RULE_COMPRESS_ALL = {\
                           ["CoAP.Option-End", 1, "up", 0xFF, "equal", "not-sent"]
                          ]
                     }
+RULE_COMPRESS_COAP = {\
+             "ruleid"  : 28,
+             "content" :[["CoAP.version", 1, "bi", 1, "equal", "not-sent"],
+                         ["CoAP.type", 1, "bi", 1, "equal", "not-sent"],
+                         ["CoAP.tokenLength", 1, "bi", 1, "equal", "not-sent"],
+                         ["CoAP.code", 1, "bi", 2, "equal", "not-sent"],
+                         ["CoAP.messageID", 1, "bi", 5,"ignore", "value-sent"],
+                         ["CoAP.token", 1, "bi", 0x82, "ignore", "value-sent"],
+                         ["CoAP.Uri-Path", 1, "up", "temperature", "equal", "not-sent"],
+                         ["CoAP.Proxy-Uri", 1, "up", "coap://[2001:db8:0:f102::1]:5683", "equal", "not-sent"],
+                         ["CoAP.Option-End", 1, "up", 0xFF, "equal", "not-sent"]
+                        ]
+                    }
+
